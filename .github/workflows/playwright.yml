@@ -1,0 +1,48 @@
+name: Playwright CI
+on:
+  push:
+  pull_request:
+jobs:
+  test-shards:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        shard: [1, 2]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm ci
+      - run: npx playwright install --with-deps
+      - run: npx playwright test --shard=${{ matrix.shard }}/2 --workers=50% --reporter=blob
+      - uses: actions/upload-artifact@v4
+        with:
+          name: blob-report-${{ matrix.shard }}
+          path: blob-report
+          retention-days: 7
+  merge-report:
+    runs-on: ubuntu-latest
+    needs: test-shards
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          name: blob-report-1
+          path: blob-report-1
+      - uses: actions/download-artifact@v4
+        with:
+          name: blob-report-2
+          path: blob-report-2
+      - run: mkdir -p blob-all && mv blob-report-1/*.zip blob-all/ || true
+      - run: mv blob-report-2/*.zip blob-all/ || true
+      - run: npx playwright merge-reports --reporter=html blob-all
+      - uses: actions/upload-artifact@v4
+        with:
+          name: playwright-html-report
+          path: playwright-report
+          retention-days: 7
