@@ -7,7 +7,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        shard: [1, 2, 3]
+        shard: [1, 2]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -15,7 +15,7 @@ jobs:
           node-version: 20
       - run: npm ci
       - run: npx playwright install --with-deps
-      - run: npx playwright test --shard=${{ matrix.shard }}/3 --workers=100% --reporter=blob
+      - run: npx playwright test --shard=${{ matrix.shard }}/2 --workers=50% --reporter=blob
       - uses: actions/upload-artifact@v4
         with:
           name: blob-report-${{ matrix.shard }}
@@ -38,11 +38,9 @@ jobs:
         with:
           name: blob-report-2
           path: blob-report-2
-      - uses: actions/download-artifact@v4
-        with:
-          name: blob-report-3
-          path: blob-report-3
-      - run: npx playwright merge-reports --reporter=html blob-report-1 blob-report-2 blob-report-3
+      - run: mkdir -p blob-all && mv blob-report-1/*.zip blob-all/ || true
+      - run: mv blob-report-2/*.zip blob-all/ || true
+      - run: npx playwright merge-reports --reporter=html blob-all
       - uses: actions/upload-artifact@v4
         with:
           name: playwright-html-report
