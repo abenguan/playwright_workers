@@ -41,6 +41,14 @@ pipeline {
         sh 'mv blob-zip-2/*.zip blob-all/ || true'
         sh 'npx playwright merge-reports --reporter=html blob-all'
         archiveArtifacts artifacts: 'playwright-report/**', fingerprint: true
+        publishHTML(target: [
+          reportDir: 'playwright-report',
+          reportFiles: 'index.html',
+          reportName: 'Playwright Report',
+          keepAll: true,
+          alwaysLinkToLastBuild: true,
+          allowMissing: true
+        ])
       }
     }
   }
