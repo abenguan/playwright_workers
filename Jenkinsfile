@@ -3,9 +3,13 @@ pipeline {
   triggers {
     pollSCM('H/5 * * * *')
   }
+  environment {
+    PATH = "/opt/homebrew/bin:/usr/local/bin:${env.PATH}"
+  }
   stages {
     stage('Install') {
       steps {
+        sh 'echo $PATH && node -v && npm -v'
         sh 'npm ci'
         sh 'npx playwright install --with-deps'
       }
